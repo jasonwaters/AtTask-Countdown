@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Countdown &mdash; AtTask</title>
+        <meta charset="utf-8">
+        <link rel="stylesheet" type="text/css" media="all" href="css/style.css" />
+        <script src="js/moment.js" type="text/javascript"></script>
+        <script src="js/jquery.js" type="text/javascript"></script>
+        <script src="js/angular.js" type="text/javascript"></script>
+        <script type="text/javascript">
+            var COUNTDOWN_TARGET_DATE = '2013-08-09 18:00'; // YYYY-MM-DD HH:mm
+        </script>
+    </head>
+    <body>
+        <div ng-app="countdown" ng-controller="CountdownController">
+            {{data.days|pad:2}} Days, {{data.hours|pad:2}} Hours, {{data.minutes|pad:2}} Minutes and {{data.seconds|pad:2}} Seconds
+        </div>
+
+        <script src="js/countdown-clock.js" type="text/javascript"></script>
+    </body>
+</html>
