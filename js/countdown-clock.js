@@ -7,6 +7,10 @@
     var SECONDS_PER_HOUR = SECONDS_PER_MINUTE * MINUTES_PER_HOUR;
     var SECONDS_PER_DAY = SECONDS_PER_MINUTE * MINUTES_PER_HOUR * HOURS_PER_DAY;
 
+    var COUNTDOWN_SETTINGS = window.COUNTDOWN_SETTINGS || {};
+
+    var API_URL = COUNTDOWN_SETTINGS['ATTASK_BASE_URL'] + "/attask/api-internal";
+
     function getTimeLeft(targetDate) {
         var days = 0, hours = 0, minutes = 0, secs = 0;
 
@@ -35,9 +39,30 @@
         };
     }
 
+    function authenticate($http, callback) {
+        var endpoint, params = {
+            'jsonp': 'JSON_CALLBACK'
+        }
+
+        if(COUNTDOWN_SETTINGS['API_KEY'] && COUNTDOWN_SETTINGS['API_KEY'].length > 0) {
+            params['apiKey'] = COUNTDOWN_SETTINGS['API_KEY'];
+            endpoint = '/session';
+        }else {
+            params['username'] = COUNTDOWN_SETTINGS['USERNAME'];
+            params['password'] = COUNTDOWN_SETTINGS['PASSWORD'];
+            endpoint = '/login';
+        }
+
+        $http.jsonp(API_URL + endpoint, {
+            'params': params
+        }).success(function(data, code) {
+            callback(data.data.sessionID);
+        });
+    }
+
     var countdownApp = angular.module('countdown', []);
 
-    countdownApp.value('targetDate', moment(COUNTDOWN_TARGET_DATE).toDate());
+    countdownApp.value('targetDate', moment(COUNTDOWN_SETTINGS['COUNTDOWN_TARGET_DATE']).toDate());
 
     countdownApp.filter('pad', function() {
         return function (value, size) {
@@ -47,7 +72,7 @@
         };
     });
 
-    countdownApp.controller('CountdownController', function($scope, targetDate) {
+    countdownApp.controller('countdown-controller', function($scope, targetDate) {
         var timer = setInterval(function() {
             var timeLeft = getTimeLeft(targetDate);
 
@@ -62,5 +87,30 @@
         }, 1000);
 
         $scope.data = getTimeLeft(targetDate);
+    });
+
+    countdownApp.controller('release-controller', function($scope, $http) {
+        authenticate($http, function(sessionID) {
+            $scope.sessionID = sessionID;
+        });
+
+        var data = {};
+
+        data.epics = [
+            {'name': 'One', 'percentComplete':10},
+            {'name': 'Two', 'percentComplete':35},
+            {'name': 'Three', 'percentComplete':68},
+            {'name': 'Four', 'percentComplete':100},
+            {'name': 'Five', 'percentComplete':81}
+        ]
+
+
+        var totalPercent = 0;
+        _.forEach(data.epics, function(value) {
+            totalPercent += value.percentComplete;
+        });
+
+        data.overallPercentComplete = totalPercent / data.epics.length;
+        $scope.data = data;
     });
 })();

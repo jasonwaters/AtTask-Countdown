@@ -1,0 +1,12 @@
+.epic-list {
+    width: 200px;
+}
+
+.epic-list .epic {
+    position: relative;
+}
+
+.epic-list .epic .percentComplete {
+    position: absolute;
+    right: 0px;
+}
