@@ -144,7 +144,6 @@
         attaskService.authenticate(); //must call this before any other api requests.
 
         attaskService.getProgram(portfolioID).then(function(program) {
-            console.log(program);
             $scope.program = program;
             var totalPercent = 0;
 
