@@ -18,7 +18,8 @@
                 'USERNAME' : 'admin',
                 'PASSWORD' : 'user',
 
-                'COUNTDOWN_TARGET_DATE' : '2013-08-09 18:00' // YYYY-MM-DD HH:mm
+                'COUNTDOWN_TARGET_DATE' : '2013-08-09 18:00', // YYYY-MM-DD HH:mm
+                'PORTFOLIO_ID' : '51dd8a47000000074daf70ecb0231034'
 
             };
         </script>
@@ -29,15 +30,14 @@
         </div>
 
         <div ng-controller="release-controller">
-            <div>{{ data.overallPercentComplete }}%</div>
+            <div>{{ program.name }} &mdash; {{ overallPercentComplete|floor }}%</div>
 
             <ul class="epic-list">
-                <li ng-repeat="epic in data.epics | orderBy:'-percentComplete'" class="epic">
-                    <span class="name">{{ epic.name }}</span>
-                    <span class="percentComplete">{{ epic.percentComplete }}%</span>
+                <li ng-repeat="project in program.projects | orderBy:'-percentComplete'" class="epic">
+                    <span class="name">{{ project.name }}</span>
+                    <span class="percentComplete">{{ project.percentComplete }}%</span>
                 </li>
             </ul>
-            <div>{{ sessionID }}</div>
         </div>
         <script src="js/countdown-clock.js" type="text/javascript"></script>
     </body>

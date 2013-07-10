@@ -39,30 +39,75 @@
         };
     }
 
-    function authenticate($http, callback) {
-        var endpoint, params = {
-            'jsonp': 'JSON_CALLBACK'
-        }
-
-        if(COUNTDOWN_SETTINGS['API_KEY'] && COUNTDOWN_SETTINGS['API_KEY'].length > 0) {
-            params['apiKey'] = COUNTDOWN_SETTINGS['API_KEY'];
-            endpoint = '/session';
-        }else {
-            params['username'] = COUNTDOWN_SETTINGS['USERNAME'];
-            params['password'] = COUNTDOWN_SETTINGS['PASSWORD'];
-            endpoint = '/login';
-        }
-
-        $http.jsonp(API_URL + endpoint, {
-            'params': params
-        }).success(function(data, code) {
-            callback(data.data.sessionID);
-        });
-    }
-
     var countdownApp = angular.module('countdown', []);
 
     countdownApp.value('targetDate', moment(COUNTDOWN_SETTINGS['COUNTDOWN_TARGET_DATE']).toDate());
+    countdownApp.value('apikey', COUNTDOWN_SETTINGS['API_KEY']);
+    countdownApp.value('username', COUNTDOWN_SETTINGS['USERNAME']);
+    countdownApp.value('password', COUNTDOWN_SETTINGS['PASSWORD']);
+    countdownApp.value('portfolioID', COUNTDOWN_SETTINGS['PORTFOLIO_ID']);
+
+    countdownApp.service('attaskService', function($window, $http, apikey, username, password) {
+        var sessionID;
+
+        function prepareParams(params) {
+            params['jsonp'] = 'JSON_CALLBACK';
+            if(apikey && apikey.length > 0) {
+                params['apikey'] = apikey;
+            }else if(sessionID && sessionID.length > 0) {
+                params['sessionID'] = sessionID;
+            }
+            return params;
+        }
+
+        this.authenticate = function() {
+            var promise;
+
+            if(apikey && apikey.length > 0) {
+                promise = {
+                    then: function(callback) {
+                        callback({'apikey': apikey});
+                    }
+                };
+            }else if(sessionID && sessionID.length > 0) {
+                promise = {
+                    then: function(callback) {
+                        callback({'sessionID': sessionID});
+                    }
+                };
+            }else {
+                var endpoint ='/login',
+                    params = {
+                        'username': username,
+                        'password': password
+                    };
+                promise = $http.jsonp(API_URL + endpoint, {
+                        'params': prepareParams(params)
+                    }).then(function(response) {
+                        sessionID = response.data.data.sessionID;
+                        return {
+                            'sessionID': sessionID
+                        }
+                    });
+            }
+            return promise;
+        };
+        this.getProgram = function(programID) {
+            var endpoint ='/program/' + programID,
+                params = {};
+
+            params['method'] = 'GET';
+            params['fields'] = 'projects:percentComplete';
+
+            var promise = $http.jsonp(API_URL + endpoint, {
+                'params' : prepareParams(params)
+            }).then(function(result) {
+                return result.data.data;
+            });
+            return promise;
+        };
+    });
+
 
     countdownApp.filter('pad', function() {
         return function (value, size) {
@@ -70,6 +115,12 @@
             while (s.length < size) s = "0" + s;
             return s;
         };
+    });
+
+    countdownApp.filter('floor', function() {
+       return function(value) {
+            return Math.floor(value);
+       };
     });
 
     countdownApp.controller('countdown-controller', function($scope, targetDate) {
@@ -89,28 +140,20 @@
         $scope.data = getTimeLeft(targetDate);
     });
 
-    countdownApp.controller('release-controller', function($scope, $http) {
-        authenticate($http, function(sessionID) {
-            $scope.sessionID = sessionID;
+    countdownApp.controller('release-controller', function($scope, attaskService, portfolioID) {
+        attaskService.authenticate(); //must call this before any other api requests.
+
+        attaskService.getProgram(portfolioID).then(function(program) {
+            console.log(program);
+            $scope.program = program;
+            var totalPercent = 0;
+
+            _.forEach(program.projects, function(project) {
+                totalPercent += project.percentComplete;
+            });
+
+            $scope.overallPercentComplete = totalPercent / program.projects.length;
+
         });
-
-        var data = {};
-
-        data.epics = [
-            {'name': 'One', 'percentComplete':10},
-            {'name': 'Two', 'percentComplete':35},
-            {'name': 'Three', 'percentComplete':68},
-            {'name': 'Four', 'percentComplete':100},
-            {'name': 'Five', 'percentComplete':81}
-        ]
-
-
-        var totalPercent = 0;
-        _.forEach(data.epics, function(value) {
-            totalPercent += value.percentComplete;
-        });
-
-        data.overallPercentComplete = totalPercent / data.epics.length;
-        $scope.data = data;
     });
 })();
