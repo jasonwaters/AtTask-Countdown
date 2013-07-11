@@ -53,7 +53,7 @@
         function prepareParams(params) {
             params['jsonp'] = 'JSON_CALLBACK';
             if(apikey && apikey.length > 0) {
-                params['apikey'] = apikey;
+                params['apiKey'] = apikey;
             }else if(sessionID && sessionID.length > 0) {
                 params['sessionID'] = sessionID;
             }
@@ -142,17 +142,18 @@
 
     countdownApp.controller('release-controller', function($scope, attaskService, portfolioID) {
         attaskService.authenticate(); //must call this before any other api requests.
-
+        $scope.overallPercentComplete = 0;
         attaskService.getProgram(portfolioID).then(function(program) {
-            $scope.program = program;
-            var totalPercent = 0;
+            if(program) {
+                $scope.program = program;
+                var totalPercent = 0;
 
-            _.forEach(program.projects, function(project) {
-                totalPercent += project.percentComplete;
-            });
+                _.forEach(program.projects, function(project) {
+                    totalPercent += project.percentComplete;
+                });
 
-            $scope.overallPercentComplete = totalPercent / program.projects.length;
-
+                $scope.overallPercentComplete = totalPercent / program.projects.length;
+            }
         });
     });
 })();
