@@ -41,19 +41,20 @@
 
     var countdownApp = angular.module('countdown', []);
 
-    countdownApp.value('targetDate', moment(COUNTDOWN_SETTINGS['COUNTDOWN_TARGET_DATE']).toDate());
-    countdownApp.value('apikey', COUNTDOWN_SETTINGS['API_KEY']);
-    countdownApp.value('username', COUNTDOWN_SETTINGS['USERNAME']);
-    countdownApp.value('password', COUNTDOWN_SETTINGS['PASSWORD']);
-    countdownApp.value('portfolioID', COUNTDOWN_SETTINGS['PORTFOLIO_ID']);
+    countdownApp.value('targetDate', moment(COUNTDOWN_SETTINGS['targetDate']).toDate());
+    countdownApp.value('apiKey', COUNTDOWN_SETTINGS['apiKey']);
+    countdownApp.value('username', COUNTDOWN_SETTINGS['username']);
+    countdownApp.value('password', COUNTDOWN_SETTINGS['password']);
+    countdownApp.value('portfolioID', COUNTDOWN_SETTINGS['portfolioID']);
+    countdownApp.value('updateFrequency', COUNTDOWN_SETTINGS['updateFrequency'] * MILLIS_PER_SECOND * SECONDS_PER_MINUTE); //convert minutes to milliseconds
 
-    countdownApp.service('attaskService', function($window, $http, apikey, username, password) {
+    countdownApp.service('attaskService', function($window, $http, apiKey, username, password) {
         var sessionID;
 
         function prepareParams(params) {
             params['jsonp'] = 'JSON_CALLBACK';
-            if(apikey && apikey.length > 0) {
-                params['apiKey'] = apikey;
+            if(apiKey && apiKey.length > 0) {
+                params['apiKey'] = apiKey;
             }else if(sessionID && sessionID.length > 0) {
                 params['sessionID'] = sessionID;
             }
@@ -63,10 +64,10 @@
         this.authenticate = function() {
             var promise;
 
-            if(apikey && apikey.length > 0) {
+            if(apiKey && apiKey.length > 0) {
                 promise = {
                     then: function(callback) {
-                        callback({'apikey': apikey});
+                        callback({'apiKey': apiKey});
                     }
                 };
             }else if(sessionID && sessionID.length > 0) {
@@ -123,37 +124,51 @@
        };
     });
 
-    countdownApp.controller('countdown-controller', function($scope, targetDate) {
-        var timer = setInterval(function() {
-            var timeLeft = getTimeLeft(targetDate);
+    countdownApp.controller('countdown-controller', function($scope, $timeout, targetDate) {
+        var timeoutId;
 
-            if (timeLeft.diff < 0) {
-                clearInterval(timer);
-                timer = null;
-            }
+        function trackTime() {
+            timeoutId = $timeout(function() {
+                var timeLeft = getTimeLeft(targetDate);
+                $scope.data = timeLeft;
 
-            $scope.$apply(function() {
-               $scope.data = timeLeft;
-            });
-        }, 1000);
+                if (timeLeft.diff > 0) {
+                    trackTime();
+                }
+            }, 1000);
+        }
 
         $scope.data = getTimeLeft(targetDate);
+        trackTime();
     });
 
-    countdownApp.controller('release-controller', function($scope, attaskService, portfolioID) {
+    countdownApp.controller('release-controller', function($scope, $timeout, attaskService, portfolioID, updateFrequency) {
         attaskService.authenticate(); //must call this before any other api requests.
         $scope.overallPercentComplete = 0;
-        attaskService.getProgram(portfolioID).then(function(program) {
-            if(program) {
-                $scope.program = program;
-                var totalPercent = 0;
 
-                _.forEach(program.projects, function(project) {
-                    totalPercent += project.percentComplete;
-                });
+        function updateNow() {
+            attaskService.getProgram(portfolioID).then(function(program) {
+                if(program) {
+                    $scope.program = program;
+                    var totalPercent = 0;
 
-                $scope.overallPercentComplete = totalPercent / program.projects.length;
-            }
-        });
+                    _.forEach(program.projects, function(project) {
+                        totalPercent += project.percentComplete;
+                    });
+                    $scope.overallPercentComplete = totalPercent / program.projects.length;
+                }
+            });
+            updateLater();
+        }
+
+        var timeoutId;
+
+        function updateLater() {
+            timeoutId = $timeout(function() {
+               updateNow();
+            }, updateFrequency);
+        }
+
+        updateNow();
     });
 })();
