@@ -39,60 +39,20 @@
         };
     }
 
-    var countdownApp = angular.module('countdown', []);
+    var countdownApp = angular.module('countdown', ['localStorage']);
 
     countdownApp.value('targetDate', moment(COUNTDOWN_SETTINGS['targetDate']).toDate());
     countdownApp.value('apiKey', COUNTDOWN_SETTINGS['apiKey']);
-    countdownApp.value('username', COUNTDOWN_SETTINGS['username']);
-    countdownApp.value('password', COUNTDOWN_SETTINGS['password']);
     countdownApp.value('portfolioID', COUNTDOWN_SETTINGS['portfolioID']);
     countdownApp.value('updateFrequency', COUNTDOWN_SETTINGS['updateFrequency'] * MILLIS_PER_SECOND * SECONDS_PER_MINUTE); //convert minutes to milliseconds
 
-    countdownApp.service('attaskService', function($window, $http, apiKey, username, password) {
-        this.sessionID = '';
+    countdownApp.service('attaskService', function($window, $http, apiKey) {
 
         this.prepareParams = function(params) {
             params['jsonp'] = 'JSON_CALLBACK';
-            if(apiKey && apiKey.length > 0) {
-                params['apiKey'] = apiKey;
-            }else if(this.sessionID && this.sessionID.length > 0) {
-                params['sessionID'] = this.sessionID;
-            }
+            params['apiKey'] = apiKey;
             return params;
         }
-
-        this.authenticate = function() {
-            var promise;
-
-            if(apiKey && apiKey.length > 0) {
-                promise = {
-                    then: function(callback) {
-                        callback({'apiKey': apiKey});
-                    }
-                };
-            }else if(this.sessionID && this.sessionID.length > 0) {
-                promise = {
-                    then: function(callback) {
-                        callback({'sessionID': this.sessionID});
-                    }
-                };
-            }else {
-                var endpoint ='/login',
-                    params = {
-                        'username': username,
-                        'password': password
-                    };
-                promise = $http.jsonp(API_URL + endpoint, {
-                        'params': this.prepareParams(params)
-                    }).then(function(response) {
-                        this.sessionID = response.data.data.sessionID;
-                        return {
-                            'sessionID': this.sessionID
-                        }
-                    }.bind(this));
-            }
-            return promise;
-        };
 
         this.getProgram = function(programID) {
             var endpoint ='/program/' + programID,
@@ -103,9 +63,7 @@
 
             var promise = $http.jsonp(API_URL + endpoint, {
                 'params' : this.prepareParams(params)
-            }).then(function(result) {
-                return result.data.data;
-            }.bind(this));
+            });
             return promise;
         };
     });
@@ -143,12 +101,16 @@
         trackTime();
     });
 
-    countdownApp.controller('release-controller', function($scope, $timeout, attaskService, portfolioID, updateFrequency) {
-        $scope.overallPercentComplete = 0;
+    countdownApp.controller('release-controller', function($scope, $timeout, $store, attaskService, portfolioID, updateFrequency) {
+        $store.bind($scope, 'overallPercentComplete', 0);
+        $store.bind($scope, 'program', null);
 
         function updateNow() {
-            attaskService.getProgram(portfolioID).then(function(program) {
-                if(program) {
+            attaskService.getProgram(portfolioID).success(function(result) {
+                $scope.isStale = result != null && result.error != null;
+                if(result && result.data && !result.error) {
+                    var program = result.data;
+                    $scope.isStale = false;
                     $scope.program = program;
                     var totalPercent = 0;
 
@@ -157,6 +119,8 @@
                     });
                     $scope.overallPercentComplete = totalPercent / program.projects.length;
                 }
+            }).error(function() {
+               $scope.isStale = true;
             });
             updateLater();
         }
@@ -169,9 +133,6 @@
             }, updateFrequency);
         }
 
-        //must call authenticate before any other api requests.
-        attaskService.authenticate().then(function(result) {
-            updateNow();
-        });
+        updateNow();
     });
 })();

@@ -2,10 +2,8 @@
 window.COUNTDOWN_SETTINGS = {
     'ATTASK_BASE_URL' : "http://attask-ondemand.com",  //url to attask
 
-    //Specify an API Key or a username and password - not both.  An API key is preferred
+    //Specify an API Key.
     'apiKey' : '',
-    'username' : '',
-    'password' : '',
 
     'targetDate' : '2020-08-09 18:00', // YYYY-MM-DD HH:mm
     'portfolioID' : '',

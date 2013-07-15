@@ -8,6 +8,8 @@
         <script src="js/lodash.js" type="text/javascript"></script>
         <script src="js/moment.js" type="text/javascript"></script>
         <script src="js/angular.js" type="text/javascript"></script>
+        <script src="js/angular-cookies.js" type="text/javascript"></script>
+        <script src="js/angular-localStorage.js" type="text/javascript"></script>
     </head>
     <body ng-app="countdown">
         <div ng-controller="countdown-controller">
@@ -23,6 +25,7 @@
                     <span class="percentComplete">{{ project.percentComplete }}%</span>
                 </li>
             </ul>
+            <div ng-show="isStale" style="display: none;">Showing Stale Data</div>
         </div>
         <script src="js/countdown.js" type="text/javascript"></script>
     </body>
