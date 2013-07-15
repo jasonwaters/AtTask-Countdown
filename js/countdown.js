@@ -49,14 +49,14 @@
     countdownApp.value('updateFrequency', COUNTDOWN_SETTINGS['updateFrequency'] * MILLIS_PER_SECOND * SECONDS_PER_MINUTE); //convert minutes to milliseconds
 
     countdownApp.service('attaskService', function($window, $http, apiKey, username, password) {
-        var sessionID;
+        this.sessionID = '';
 
-        function prepareParams(params) {
+        this.prepareParams = function(params) {
             params['jsonp'] = 'JSON_CALLBACK';
             if(apiKey && apiKey.length > 0) {
                 params['apiKey'] = apiKey;
-            }else if(sessionID && sessionID.length > 0) {
-                params['sessionID'] = sessionID;
+            }else if(this.sessionID && this.sessionID.length > 0) {
+                params['sessionID'] = this.sessionID;
             }
             return params;
         }
@@ -70,10 +70,10 @@
                         callback({'apiKey': apiKey});
                     }
                 };
-            }else if(sessionID && sessionID.length > 0) {
+            }else if(this.sessionID && this.sessionID.length > 0) {
                 promise = {
                     then: function(callback) {
-                        callback({'sessionID': sessionID});
+                        callback({'sessionID': this.sessionID});
                     }
                 };
             }else {
@@ -83,16 +83,17 @@
                         'password': password
                     };
                 promise = $http.jsonp(API_URL + endpoint, {
-                        'params': prepareParams(params)
+                        'params': this.prepareParams(params)
                     }).then(function(response) {
-                        sessionID = response.data.data.sessionID;
+                        this.sessionID = response.data.data.sessionID;
                         return {
-                            'sessionID': sessionID
+                            'sessionID': this.sessionID
                         }
-                    });
+                    }.bind(this));
             }
             return promise;
         };
+
         this.getProgram = function(programID) {
             var endpoint ='/program/' + programID,
                 params = {};
@@ -101,10 +102,10 @@
             params['fields'] = 'projects:percentComplete';
 
             var promise = $http.jsonp(API_URL + endpoint, {
-                'params' : prepareParams(params)
+                'params' : this.prepareParams(params)
             }).then(function(result) {
                 return result.data.data;
-            });
+            }.bind(this));
             return promise;
         };
     });
@@ -143,7 +144,6 @@
     });
 
     countdownApp.controller('release-controller', function($scope, $timeout, attaskService, portfolioID, updateFrequency) {
-        attaskService.authenticate(); //must call this before any other api requests.
         $scope.overallPercentComplete = 0;
 
         function updateNow() {
@@ -169,6 +169,9 @@
             }, updateFrequency);
         }
 
-        updateNow();
+        //must call authenticate before any other api requests.
+        attaskService.authenticate().then(function(result) {
+            updateNow();
+        });
     });
 })();
