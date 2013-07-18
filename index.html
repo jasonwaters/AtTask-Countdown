@@ -23,19 +23,19 @@
                     <div ng-controller="countdown-controller" id="countdown" class="middle">
                         <div class="inner-countdown">
                             <div class="days">
-                                <div class="countdown-value days-value">{{data.days|pad:2}}</div>
+                                <div class="countdown-value days-value">{{clock.days|pad:2}}</div>
                                 <div class="countdown-line"></div>
                             </div>
                             <div class="hours">
-                                <div class="countdown-value hours-value">{{data.hours|pad:2}}</div>
+                                <div class="countdown-value hours-value">{{clock.hours|pad:2}}</div>
                                 <div class="countdown-line"></div>
                             </div>
                             <div class="minutes">
-                                <div class="countdown-value minutes-value">{{data.minutes|pad:2}}</div>
+                                <div class="countdown-value minutes-value">{{clock.minutes|pad:2}}</div>
                                 <div class="countdown-line"></div>
                             </div>
                             <div class="seconds">
-                                <div class="countdown-value seconds-value">{{data.seconds|pad:2}}</div>
+                                <div class="countdown-value seconds-value">{{clock.seconds|pad:2}}</div>
                                 <div class="countdown-line"></div>
                             </div>
                         </div>
@@ -59,10 +59,10 @@
                 <div class="percent-container" ng-class="{true: 'green', false: 'red'}[onTarget]" style="height: {{ percentContainerHeight }}px;">
                     <h1 style="line-height: {{ percentContainerHeight-40 }}px;">{{ overallPercentComplete|floor }}%</h1>
                     <div class="meter">
-                        <div class="marker" style="left: -20px;"></div>
+                        <div class="marker" style="left: {{ markerPosition-7 }}px;"></div>
                         <div class="fill" style="width:{{ overallPercentComplete|floor }}%"></div>
-                        <div class="ideal-line" style="left: -20px;"></div>
-                        <div class="ideal-text" style="left: -100px;">Target</div>
+                        <div class="ideal-line" style="left: {{ markerPosition-1 }}px;"></div>
+                        <div class="ideal-text" style="left: {{ markerPosition+20 }}px;">Target</div>
                     </div>
                 </div>
             </div>

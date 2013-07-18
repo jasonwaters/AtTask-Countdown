@@ -1,4 +1,6 @@
 (function () {
+    "use strict";
+
     var MILLIS_PER_SECOND = 1000;
     var MINUTES_PER_HOUR = 60;
     var HOURS_PER_DAY = 24;
@@ -11,47 +13,28 @@
 
     var API_URL = COUNTDOWN_SETTINGS['ATTASK_BASE_URL'] + "/attask/api-internal";
 
-    function getTimeLeft(targetDate) {
-        var days = 0, hours = 0, minutes = 0, secs = 0;
+    var countdownApp = angular.module('countdown', ['localStorage'], null);
 
-        var now = new Date();
-        var diff = (targetDate.getTime() - now.getTime() + 5)/MILLIS_PER_SECOND; //in seconds
-
-        if (diff >= 0) {
-            days = Math.floor(diff / SECONDS_PER_DAY);
-            diff = diff % SECONDS_PER_DAY; //remaining seconds in excess of full days
-
-            hours = Math.floor(diff / SECONDS_PER_HOUR);
-            diff = diff % SECONDS_PER_HOUR; //remaining seconds in excess of full hours
-
-            minutes = Math.floor(diff / SECONDS_PER_MINUTE);
-            diff = diff % SECONDS_PER_MINUTE; //remaining seconds in excess of full minutes
-
-            secs = Math.floor(diff);
+    countdownApp.factory('Settings', function() {
+        return  {
+            'startDate': moment(COUNTDOWN_SETTINGS['startDate']).toDate(),
+            'targetDate': moment(COUNTDOWN_SETTINGS['targetDate']).toDate(),
+            'apiKey': COUNTDOWN_SETTINGS['apiKey'],
+            'portfolioID': COUNTDOWN_SETTINGS['portfolioID'],
+            'updateFrequency': COUNTDOWN_SETTINGS['updateFrequency'] * MILLIS_PER_SECOND * SECONDS_PER_MINUTE
         }
+    });
 
-        return {
-            'diff': diff,
-            'days': days,
-            'hours': hours,
-            'minutes': minutes,
-            'seconds': secs
-        };
-    }
+    countdownApp.factory('SharedData', function() {
+        return  {
+            program:null
+        }
+    });
 
-    var countdownApp = angular.module('countdown', ['localStorage']);
-
-    countdownApp.value('startDate', moment(COUNTDOWN_SETTINGS['startDate']).toDate());
-    countdownApp.value('targetDate', moment(COUNTDOWN_SETTINGS['targetDate']).toDate());
-    countdownApp.value('apiKey', COUNTDOWN_SETTINGS['apiKey']);
-    countdownApp.value('portfolioID', COUNTDOWN_SETTINGS['portfolioID']);
-    countdownApp.value('updateFrequency', COUNTDOWN_SETTINGS['updateFrequency'] * MILLIS_PER_SECOND * SECONDS_PER_MINUTE); //convert minutes to milliseconds
-
-    countdownApp.service('attaskService', function($window, $http, apiKey) {
-
+    countdownApp.service('attaskService', function($window, $http, Settings) {
         this.prepareParams = function(params) {
             params['jsonp'] = 'JSON_CALLBACK';
-            params['apiKey'] = apiKey;
+            params['apiKey'] = Settings.apiKey;
             return params;
         }
 
@@ -68,7 +51,6 @@
             return promise;
         };
     });
-
 
     countdownApp.filter('pad', function() {
         return function (value, size) {
@@ -96,33 +78,58 @@
        };
     });
 
-    countdownApp.controller('countdown-controller', function($scope, $timeout, targetDate) {
+    countdownApp.controller('countdown-controller', function($scope, $timeout, Settings, SharedData) {
         var timeoutId;
+
+        function getTimeLeft(targetDate) {
+            var days = 0, hours = 0, minutes = 0, secs = 0;
+
+            var diff = (targetDate.getTime() - new Date().getTime() + 5)/MILLIS_PER_SECOND; //in seconds
+
+            if (diff >= 0) {
+                days = Math.floor(diff / SECONDS_PER_DAY);
+                diff = diff % SECONDS_PER_DAY; //remaining seconds in excess of full days
+
+                hours = Math.floor(diff / SECONDS_PER_HOUR);
+                diff = diff % SECONDS_PER_HOUR; //remaining seconds in excess of full hours
+
+                minutes = Math.floor(diff / SECONDS_PER_MINUTE);
+                diff = diff % SECONDS_PER_MINUTE; //remaining seconds in excess of full minutes
+
+                secs = Math.floor(diff);
+            }
+
+            return {
+                'diff': diff,
+                'days': days,
+                'hours': hours,
+                'minutes': minutes,
+                'seconds': secs
+            };
+        }
 
         function trackTime() {
             timeoutId = $timeout(function() {
-                var timeLeft = getTimeLeft(targetDate);
-                $scope.data = timeLeft;
+                var timeLeft = getTimeLeft(Settings.targetDate);
+                $scope.clock = timeLeft;
 
                 if (timeLeft.diff > 0) {
                     trackTime();
                 }
             }, 1000);
         }
-
-        $scope.data = getTimeLeft(targetDate);
+        $scope.$watch(function() { return SharedData.program; }, function(program) {
+            $scope.program = program;
+        });
+        $scope.clock = getTimeLeft(Settings.targetDate);
         trackTime();
     });
 
-    countdownApp.controller('release-controller', function($scope, $timeout, $store, startDate, targetDate, orderByFilter, attaskService, portfolioID, updateFrequency) {
+    countdownApp.controller('release-controller', function($scope, $timeout, $store, orderByFilter, attaskService, Settings, SharedData) {
 //        $store.bind($scope, 'overallPercentComplete', 0);
 //        $store.bind($scope, 'program', null);
 //        $store.bind($scope, 'numRows', 0);
 //        $store.bind($scope, 'percentContainerHeight', 0);
-
-        var totalDurationTime = targetDate.getTime() - startDate.getTime();
-        var currentDurationTime = targetDate.getTime() - new Date().getTime();
-        $scope.expectedPercentComplete = Math.max(0,Math.min(100,(currentDurationTime / totalDurationTime)*100));
 
         function pairUp(projects) {
             projects = orderByFilter(projects, '-percentComplete');
@@ -143,27 +150,32 @@
         };
 
         function updateNow() {
-            attaskService.getProgram(portfolioID).success(function(result) {
+            attaskService.getProgram(Settings.portfolioID).success(function(result) {
                 $scope.isStale = result != null && result.error != null;
                 if(result && result.data && !result.error) {
-                    var program = result.data;
-                    var projects = program.projects;
+                    SharedData.program = result.data;
+                    var projects = SharedData.program['projects'];
                     $scope.isStale = false;
-                    $scope.program = program;
+                    $scope.program = SharedData.program;
                     var totalPercent = 0;
 
                     for(var i=0;i<projects.length;i++) {
-                        totalPercent += projects[i].percentComplete;
+                        totalPercent += projects[i]['percentComplete'];
                     }
 
                     pairUp(projects);
                     $scope.overallPercentComplete = totalPercent / projects.length;
+
+                    $scope.numRows = Math.ceil(projects.length / 2);
+
+                    var VERT_PADDING = 25, ROW_HEIGHT=60, METER_WIDTH=320;
+                    $scope.percentContainerHeight = Math.ceil(ROW_HEIGHT * $scope.numRows) + (VERT_PADDING*2)
+
+                    var totalDurationTime = Settings.targetDate - Settings.startDate;
+                    var currentDurationTime = new Date()-Settings.startDate;
+                    $scope.expectedPercentComplete = Math.max(0,Math.min(100,(currentDurationTime / totalDurationTime)*100));
                     $scope.onTarget = $scope.overallPercentComplete >= $scope.expectedPercentComplete;
-
-                    $scope.numRows = Math.ceil(program.projects.length / 2);
-
-                    var VERT_PADDING = 25, ROW_HEIGHT=60;
-                    $scope.percentContainerHeight = Math.ceil(ROW_HEIGHT*$scope.numRows) + (VERT_PADDING*2)
+                    $scope.markerPosition = METER_WIDTH * ($scope.expectedPercentComplete/100);
                 }
             }).error(function() {
                $scope.isStale = true;
@@ -176,7 +188,7 @@
         function updateLater() {
             timeoutId = $timeout(function() {
                updateNow();
-            }, updateFrequency);
+            }, Settings.updateFrequency);
         }
 
         updateNow();
