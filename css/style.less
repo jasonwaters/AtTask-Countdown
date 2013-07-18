@@ -1,0 +1,285 @@
+@anaconda-dark: #131313;
+@anaconda-light: #929294;
+@attask-orange: #f6b22a;
+@attask-orange-light: #fbdb9b; //http://www.colorhexa.com/f6b22a
+@attask-orange-dark: #ab7c0a;
+
+@attask-blue: #2ad4f6;
+
+@anaconda-light-grey: #424242;
+
+@orange-text: #f6b32b;
+
+@attask-green: #65b144;
+@attask-green-dark: #497f31;
+
+@green_is_good: #62c200;
+@yellow_is_trouble: #e25813;
+@red_is_danger: #a1090a;
+
+.gradient(@startColor: #555, @endColor: #333) {
+  background-color: mix(@startColor, @endColor, 60%);
+  background-image: -moz-linear-gradient(top, @startColor, @endColor); // FF 3.6+
+  background-image: -ms-linear-gradient(top, @startColor, @endColor); // IE10
+  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(@startColor), to(@endColor)); // Safari 4+, Chrome 2+
+  background-image: -webkit-linear-gradient(top, @startColor, @endColor); // Safari 5.1+, Chrome 10+
+  background-image: -o-linear-gradient(top, @startColor, @endColor); // Opera 11.10
+  background-image: linear-gradient(top, @startColor, @endColor); // The standard
+  filter: e(%("progid:DXImageTransform.Microsoft.gradient(startColorstr='%d', endColorstr='%d', GradientType=0)",@startColor,@endColor)); // IE9 and down
+}
+
+body {
+  background: #131313 url('../img/darknoise.png');
+}
+
+#blaze {
+  width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 200px;
+  position: relative;
+
+  .blaze-logo {
+    background: url('../img/logo.png') no-repeat;
+    width: 377px;
+    height: 197px;
+    margin-top: 40px;
+    cursor: pointer;
+  }
+
+  .vertical-divider-left {
+    border-left: 1px solid #454545;
+  }
+
+  #countdown {
+    background: url("../img/countdown.png");
+    width: 613px;
+    height: 276px;
+    margin-top: -10px;
+    margin-left: -30px;
+
+    .days, .hours, .minutes, .seconds {
+      display: inline-block;
+      width: 59px;
+      height: 57px;
+      margin-right: 21px;
+      border: none;
+    }
+
+    .inner-countdown {
+      padding-top: 101px;
+      padding-left: 150px;
+      color: white;
+      font-weight: bold;
+      text-align: left;
+    }
+
+    .countdown-line {
+      top: 8px;
+      position: relative;
+      height: 1px;
+      width: 57px;
+      background-color: #000000;
+    }
+
+    .countdown-value {
+      top: 20px;
+      position: relative;
+      text-align: center;
+      font-size: 32px;
+      left: 0px;
+    }
+  }
+
+  .epic-list {
+    color: #929294;
+    font-size: 30px;
+    margin-top: 140px;
+  }
+
+  .epic[data-required="False"] {
+    .icon-gift {
+      color: @green_is_good;
+      font-size: 20px;
+    }
+  }
+
+  .epic-row {
+    background-color: rgba(255, 255, 255, 0.07);
+    border: 1px solid #3b3b3b;
+    border-radius: 8px;
+    padding: 18px 0;
+    margin-bottom: 2px;
+    color: #a7a7a9;
+    text-transform: uppercase;
+    font-size: 0.8em;
+    font-weight: normal;
+
+    a, a:active, a:focus, a:visited {
+      text-decoration: none;
+      color: #a7a7a9;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .epic-name {
+      float: left;
+    }
+
+    i {
+      font-size: 14px;
+      vertical-align: middle;
+      display: inline-block;
+      margin-top: -4px;
+      color: @green_is_good;
+    }
+
+    .epic-percent {
+      float: right;
+    }
+
+    .left-side, .right-side {
+      padding: 0 25px;
+    }
+
+    .left-side {
+      float: left;
+      width: 34%;
+    }
+
+    .right-side {
+      width: 36%;
+      float: right;
+    }
+  }
+
+  .percent-container {
+    background-color: #212121;
+    border-radius: 8px;
+    width: 320px;
+    height: 290px;
+    position: absolute;
+    top: 379px;
+    left: 530px;
+    z-index: 999;
+    overflow: hidden;
+    box-shadow: 0 0 300px 0px #000000;
+
+    h1 {
+      font-size: 8em;
+      text-align: center;
+      text-shadow: black 0.05em 0.05em 0.2em;
+    }
+
+    &.green {
+      color: @green_is_good;
+      border: 1px solid @green_is_good;
+
+      .fill {
+        background-color: rgba(98, 194, 0, 0.85);
+      }
+    }
+
+    &.yellow {
+      color: @yellow_is_trouble;
+      border: 1px solid @yellow_is_trouble;
+      .fill {
+        background-color: rgba(226, 88, 19, 0.85);
+      }
+    }
+
+    &.red {
+      color: @red_is_danger;
+      border: 1px solid @red_is_danger;
+      .fill {
+        background-color: rgba(161, 9, 10, 0.85);
+      }
+    }
+
+    .meter {
+      height: 26px;
+      bottom: 0px;
+      width: 320px;
+      border-left: none;
+      border-right: none;
+      border-bottom: none;
+      position: absolute;
+
+      overflow: visible;
+      font-size: 30px;
+      background: url("../img/meter-bg.png");
+      background-color: @anaconda-light-grey;
+      text-align: left;
+      font-weight: bold;
+
+      &.countdown {
+        margin: 26px auto 0 auto;
+        width: 324px;
+        height: 37px;
+      }
+
+      label {
+        padding-left: 5px;
+        //        padding-top: 8px;
+        display: block;
+        color: #fff;
+      }
+      .fill {
+        position: absolute;
+        height: 100%;
+        overflow: hidden;
+        top: 0;
+        &.orange {
+          .gradient(@attask-orange, @attask-orange-dark);
+        }
+
+        &.green {
+          .gradient(@attask-green, @attask-green-dark);
+        }
+
+        &.bonus {
+          left: 324px;
+        }
+
+        label {
+          color: #fff;
+        }
+      }
+
+      .marker {
+        position: absolute;
+        top: -24px;
+        background: url("../img/marker.png") no-repeat;
+        width: 14px;
+        height: 23px;
+      }
+
+      .ideal-line {
+        position: absolute;
+        width: 2px;
+        background-color: @green_is_good;
+        height: 27px;
+        top: -1px;
+        box-shadow: 0 0 4px 0 #1a1a1a;
+      }
+
+      .ideal-text {
+        position: absolute;
+        top: -24px;
+        color: #939393;
+        text-transform: uppercase;
+        font-size: .35em;
+      }
+    }
+  }
+}
+
+.icon-thumbs-down {
+  color: @red_is_danger;
+}
+
+.icon-thumbs-up {
+  color: @green_is_good;
+}

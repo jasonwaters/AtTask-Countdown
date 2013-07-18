@@ -41,6 +41,7 @@
 
     var countdownApp = angular.module('countdown', ['localStorage']);
 
+    countdownApp.value('startDate', moment(COUNTDOWN_SETTINGS['startDate']).toDate());
     countdownApp.value('targetDate', moment(COUNTDOWN_SETTINGS['targetDate']).toDate());
     countdownApp.value('apiKey', COUNTDOWN_SETTINGS['apiKey']);
     countdownApp.value('portfolioID', COUNTDOWN_SETTINGS['portfolioID']);
@@ -79,7 +80,19 @@
 
     countdownApp.filter('floor', function() {
        return function(value) {
+            if(value == null) {
+                return 0
+            }
             return Math.floor(value);
+       };
+    });
+
+    countdownApp.filter('ceil', function() {
+       return function(value) {
+            if(value == null) {
+                return 0
+            }
+            return Math.ceil(value);
        };
     });
 
@@ -101,23 +114,56 @@
         trackTime();
     });
 
-    countdownApp.controller('release-controller', function($scope, $timeout, $store, attaskService, portfolioID, updateFrequency) {
-        $store.bind($scope, 'overallPercentComplete', 0);
-        $store.bind($scope, 'program', null);
+    countdownApp.controller('release-controller', function($scope, $timeout, $store, startDate, targetDate, orderByFilter, attaskService, portfolioID, updateFrequency) {
+//        $store.bind($scope, 'overallPercentComplete', 0);
+//        $store.bind($scope, 'program', null);
+//        $store.bind($scope, 'numRows', 0);
+//        $store.bind($scope, 'percentContainerHeight', 0);
+
+        var totalDurationTime = targetDate.getTime() - startDate.getTime();
+        var currentDurationTime = targetDate.getTime() - new Date().getTime();
+        $scope.expectedPercentComplete = Math.max(0,Math.min(100,(currentDurationTime / totalDurationTime)*100));
+
+        function pairUp(projects) {
+            projects = orderByFilter(projects, '-percentComplete');
+            var pairedList = [];
+            var group = [];
+
+            for(var i =0;i<projects.length;i++) {
+                if(group.length < 2) {
+                    group.push(projects[i]);
+                }
+
+                if(group.length == 2 || i == projects.length-1) {
+                    pairedList.push(group);
+                    group = [];
+                }
+            }
+            $scope.projectPairs = pairedList;
+        };
 
         function updateNow() {
             attaskService.getProgram(portfolioID).success(function(result) {
                 $scope.isStale = result != null && result.error != null;
                 if(result && result.data && !result.error) {
                     var program = result.data;
+                    var projects = program.projects;
                     $scope.isStale = false;
                     $scope.program = program;
                     var totalPercent = 0;
 
-                    _.forEach(program.projects, function(project) {
-                        totalPercent += project.percentComplete;
-                    });
-                    $scope.overallPercentComplete = totalPercent / program.projects.length;
+                    for(var i=0;i<projects.length;i++) {
+                        totalPercent += projects[i].percentComplete;
+                    }
+
+                    pairUp(projects);
+                    $scope.overallPercentComplete = totalPercent / projects.length;
+                    $scope.onTarget = $scope.overallPercentComplete >= $scope.expectedPercentComplete;
+
+                    $scope.numRows = Math.ceil(program.projects.length / 2);
+
+                    var VERT_PADDING = 25, ROW_HEIGHT=60;
+                    $scope.percentContainerHeight = Math.ceil(ROW_HEIGHT*$scope.numRows) + (VERT_PADDING*2)
                 }
             }).error(function() {
                $scope.isStale = true;
