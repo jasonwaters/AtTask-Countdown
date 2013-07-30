@@ -11,7 +11,8 @@
 
     var COUNTDOWN_SETTINGS = window.COUNTDOWN_SETTINGS || {};
 
-    var API_URL = COUNTDOWN_SETTINGS['ATTASK_BASE_URL'] + "/attask/api-internal";
+    var BASE_URL = COUNTDOWN_SETTINGS['ATTASK_BASE_URL'];
+    var API_URL = BASE_URL + "/attask/api-internal";
 
     var countdownApp = angular.module('countdown', ['localStorage'], null);
 
@@ -20,7 +21,7 @@
             'startDate': moment(COUNTDOWN_SETTINGS['startDate']).toDate(),
             'targetDate': moment(COUNTDOWN_SETTINGS['targetDate']).toDate(),
             'apiKey': COUNTDOWN_SETTINGS['apiKey'],
-            'portfolioID': COUNTDOWN_SETTINGS['portfolioID'],
+            'programID': COUNTDOWN_SETTINGS['programID'],
             'updateFrequency': COUNTDOWN_SETTINGS['updateFrequency'] * MILLIS_PER_SECOND * SECONDS_PER_MINUTE
         }
     });
@@ -50,6 +51,12 @@
             });
             return promise;
         };
+    });
+
+    countdownApp.filter('linkToProject', function() {
+        return function(projectID) {
+            return BASE_URL + "/project/view?ID=" + projectID;
+        }
     });
 
     countdownApp.filter('pad', function() {
@@ -126,10 +133,14 @@
     });
 
     countdownApp.controller('release-controller', function($scope, $timeout, $store, orderByFilter, attaskService, Settings, SharedData) {
-//        $store.bind($scope, 'overallPercentComplete', 0);
-//        $store.bind($scope, 'program', null);
-//        $store.bind($scope, 'numRows', 0);
-//        $store.bind($scope, 'percentContainerHeight', 0);
+        $store.bind($scope, 'overallPercentComplete', 0);
+        $store.bind($scope, 'program', null);
+        $store.bind($scope, 'projectPairs', null);
+        $store.bind($scope, 'numRows', 0);
+        $store.bind($scope, 'percentContainerHeight', 0);
+        $store.bind($scope, 'expectedPercentComplete', 0);
+        $store.bind($scope, 'onTarget', 0);
+        $store.bind($scope, 'markerPosition', 0);
 
         function pairUp(projects) {
             projects = orderByFilter(projects, '-percentComplete');
@@ -150,7 +161,7 @@
         };
 
         function updateNow() {
-            attaskService.getProgram(Settings.portfolioID).success(function(result) {
+            attaskService.getProgram(Settings.programID).success(function(result) {
                 $scope.isStale = result != null && result.error != null;
                 if(result && result.data && !result.error) {
                     SharedData.program = result.data;

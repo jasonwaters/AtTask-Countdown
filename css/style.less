@@ -112,7 +112,7 @@ body {
     margin-bottom: 2px;
     color: #a7a7a9;
     text-transform: uppercase;
-    font-size: 0.8em;
+    font-size: 0.78em;
     font-weight: normal;
 
     a, a:active, a:focus, a:visited {
@@ -126,6 +126,10 @@ body {
 
     .epic-name {
       float: left;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 84%;
     }
 
     i {

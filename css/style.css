@@ -73,7 +73,7 @@ body {
   margin-bottom: 2px;
   color: #a7a7a9;
   text-transform: uppercase;
-  font-size: 0.8em;
+  font-size: 0.78em;
   font-weight: normal;
 }
 #blaze .epic-row a,
@@ -88,6 +88,10 @@ body {
 }
 #blaze .epic-row .epic-name {
   float: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 84%;
 }
 #blaze .epic-row i {
   font-size: 14px;

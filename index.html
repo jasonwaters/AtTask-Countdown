@@ -47,11 +47,11 @@
                 <div class="epic-list">
                     <div ng-repeat="pair in projectPairs" class="row-fluid epic-row">
                         <div class="epic left-side">
-                            <div class="epic-name"><a href="#">{{ pair[0].name }}</a></div>
+                            <div class="epic-name"><a href="{{ pair[0].ID|linkToProject }}">{{ pair[0].name }}</a></div>
                             <div class="epic-percent">{{ pair[0].percentComplete|floor }}%</div>
                         </div>
                         <div ng-show="pair[1]" class="epic right-side">
-                            <div class="epic-name"><a href="#">{{ pair[1].name }}</a></div>
+                            <div class="epic-name"><a href="{{ pair[1].ID|linkToProject }}">{{ pair[1].name }}</a></div>
                             <div class="epic-percent">{{ pair[1].percentComplete|floor }}%</div>
                         </div>
                     </div>
@@ -67,9 +67,6 @@
                 </div>
             </div>
         </div>
-
-        <!---------------------------------------------------------------------------->
-        <!--<div ng-show="isStale" style="display: none;">Showing Stale Data</div>-->
         <script src="js/countdown.js" type="text/javascript"></script>
     </body>
 </html>
