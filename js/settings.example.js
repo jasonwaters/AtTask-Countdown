@@ -5,8 +5,8 @@ window.COUNTDOWN_SETTINGS = {
     //Specify an API Key.
     'apiKey' : '',
 
-    'startDate': '2013-07-01 9:00', // YYYY-MM-DD HH:mm
-    'targetDate' : '2020-08-09 18:00', // YYYY-MM-DD HH:mm
+    'startDate': '2013-09-19 9:00', // YYYY-MM-DD HH:mm
+    'targetDate' : '2014-08-09 18:00', // YYYY-MM-DD HH:mm
 
     'programID' : '',
 
