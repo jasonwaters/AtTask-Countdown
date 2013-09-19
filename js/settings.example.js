@@ -1,6 +1,6 @@
 //duplicate this file and name it "settings.js", then replace the values with ones specific to you.
 window.COUNTDOWN_SETTINGS = {
-    'ATTASK_BASE_URL' : "http://attask-ondemand.com",  //url to attask
+    'ATTASK_BASE_URL' : "https://attask-ondemand.com",  //url to attask
 
     //Specify an API Key.
     'apiKey' : '',
