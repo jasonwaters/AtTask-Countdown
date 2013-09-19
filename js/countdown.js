@@ -85,6 +85,12 @@
        };
     });
 
+    countdownApp.filter('max', function() {
+        return function(value, maximum) {
+            return Math.min(value, maximum);
+        }
+    })
+
     countdownApp.controller('countdown-controller', function($scope, $timeout, Settings, SharedData) {
         var timeoutId;
 

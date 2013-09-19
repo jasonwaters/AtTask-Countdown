@@ -57,9 +57,9 @@
                     </div>
                 </div>
                 <div class="percent-container" ng-class="{true: 'green', false: 'red'}[onTarget]" style="height: {{ percentContainerHeight }}px;">
-                    <h1 style="line-height: {{ percentContainerHeight-40 }}px;">{{ overallPercentComplete|floor }}%</h1>
+                    <h1 style="line-height: {{ percentContainerHeight-40 }}px;font-size:{{ numRows*2|max:8 }}em">{{ overallPercentComplete|floor }}%</h1>
                     <div class="meter">
-                        <div class="marker" style="left: {{ markerPosition-7 }}px;"></div>
+                        <div class="marker" data-expectedpercent="{{ expectedPercentComplete }}" style="left: {{ markerPosition-7 }}px;"></div>
                         <div class="fill" style="width:{{ overallPercentComplete|floor }}%"></div>
                         <div class="ideal-line" style="left: {{ markerPosition-1 }}px;"></div>
                         <div class="ideal-text" style="left: {{ markerPosition+20 }}px;">Target</div>
